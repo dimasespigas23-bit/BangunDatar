@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tebak Bangun Datar</title>
+<link rel="stylesheet" href="style.css">
+<style>
+/* ================= POPUP PERATURAN TANPA SHADOW ================= */
+
+/* overlay + popup center */
+.popup {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%,-50%) scale(0.5);
+    opacity: 0;
+    z-index: 1000;
+    width: 90%;
+    max-width: 400px;
+    justify-content: center;
+    align-items: center;
+}
+
+/* popup muncul */
+.popup.show{
+    display: flex;
+    opacity:1;
+    transform: translate(-50%,-50%) scale(1);
+    animation: popupBounce .6s ease;
+}
+
+/* konten popup */
+.popup-content {
+    background: linear-gradient(180deg,#7a4a22,#4b2a12);
+    padding: 25px 20px;
+    border-radius: 22px;
+    color: white;
+    text-align: left;
+    width: 100%;
+    border:5px solid #41200d;
+    overflow:hidden;
+}
+
+/* judul dan list */
+.popup-content h2 { text-align: center; margin-bottom: 15px; }
+.popup-content ul { padding-left: 20px; margin-bottom: 15px; }
+
+/* tombol popup */
+.popup-content .btn {
+    width: 100%;
+    margin: 8px 0 0;
+}
+
+/* animasi popup */
+@keyframes popupBounce{
+0%{transform:translate(-50%,-50%) scale(.4);}
+60%{transform:translate(-50%,-50%) scale(1.08);}
+100%{transform:translate(-50%,-50%) scale(1);}
+}
+</style>
+</head>
+
+<body>
+
+<div class="panel">
+    <h1>Tebak Bangun Datar</h1>
+
+    <button class="btn" onclick="play()">▶ MULAI</button>
+    <button class="btn" onclick="peraturan()">Peraturan Bermain</button>
+</div>
+
+<!-- POPUP PERATURAN -->
+<div id="rulesPopup" class="popup">
+    <div class="popup-content">
+        <h2>Peraturan Bermain</h2>
+        <ul>
+            <li>Setiap pertanyaan memiliki waktu 10 detik.</li>
+            <li>Pilih jawaban yang benar untuk mendapatkan skor 10.</li>
+            <li>Salah menjawab akan mengurangi nyawa 1.</li>
+            <li>Permainan berakhir jika nyawa habis atau semua pertanyaan selesai.</li>
+        </ul>
+        <button class="btn" onclick="closeRules()">Tutup</button>
+    </div>
+</div>
+
+<script>
+// Tombol play → set flag BGM lalu pindah ke game.html
+function play(){
+    localStorage.setItem("playBgmOnLoad", "true");
+    location.href = "game.html";
+}
+
+// Popup Peraturan
+function peraturan() {
+    document.getElementById("rulesPopup").classList.add("show");
+}
+function closeRules() {
+    document.getElementById("rulesPopup").classList.remove("show");
+}
+</script>
+
+</body>
+</html>

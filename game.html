@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Game</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="panel">
+
+<h2>Tebak Bangun Datar</h2>
+
+<!-- STATUS ATAS -->
+<div class="status">
+❤️ <span id="lives">3</span>
+⭐ <span id="score">0</span>
+
+<!-- Tombol toggle musik -->
+<button class="soundBtn" onclick="toggleSound()">🔊</button>
+</div>
+
+<div class="progress">
+<div id="progressBar"></div>
+</div>
+
+<img id="shapeImg" alt="Bangun Datar">
+
+<p id="fact"></p>
+
+<!-- TIMER -->
+<div class="timerBox">
+⏱ <span id="timer">10</span>
+</div>
+
+<div id="answers"></div>
+
+</div>
+
+<!-- POPUP AKHIR GAME -->
+<div id="popup" class="popup">
+<h2>🎉 Selesai!</h2>
+<p id="finalScore"></p>
+<p>✅ Benar: <span id="correctCount"></span></p>
+<p>❌ Salah: <span id="wrongCount"></span></p>
+<p>🏆 Highscore: <span id="bestScore"></span></p>
+
+<button class="btn" onclick="restart()">Ulangi</button>
+<button class="btn" onclick="home()">Home</button>
+</div>
+
+<!-- AUDIO -->
+<audio id="bgm" src="sound/Pixel-Peeker-Polka-faster(chosic.com).mp3" loop></audio>
+<audio id="correct" src="sound/mixkit-correct-answer-tone-2870.wav"></audio>
+<audio id="wrong" src="sound/mixkit-wrong-answer-fail-notification-946.wav"></audio>
+
+<script>
+// ========================= DATA SOAL =========================
+const allQuestions=[
+{img:"gambar/kotak.png",answer:"Persegi",fact:"Memiliki 4 sisi sama panjang"},
+{img:"gambar/persegipanjang.png",answer:"Persegi Panjang",fact:"Sisi berhadapan sama panjang"},
+{img:"gambar/segitiga.png",answer:"Segitiga",fact:"Memiliki 3 sisi"},
+{img:"gambar/bulat.png",answer:"Lingkaran",fact:"Tidak memiliki sudut"},
+{img:"gambar/jajargenjang.png",answer:"Jajar Genjang",fact:"Sisi berhadapan sejajar"},
+{img:"gambar/trapesium.png",answer:"Trapesium",fact:"Memiliki satu pasang sisi sejajar"},
+{img:"gambar/belahketupat.png",answer:"Belah Ketupat",fact:"Semua sisi sama panjang"},
+{img:"gambar/layang.png",answer:"Layang-layang",fact:"Dua pasang sisi sama panjang"},
+{img:"gambar/segilima.png",answer:"Segi Lima",fact:"Memiliki 5 sisi"},
+{img:"gambar/segienam.png",answer:"Segi Enam",fact:"Memiliki 6 sisi"}
+];
+
+// ========================= DOM CACHE =========================
+const shapeImg=document.getElementById("shapeImg");
+const fact=document.getElementById("fact");
+const scoreEl=document.getElementById("score");
+const livesEl=document.getElementById("lives");
+const timerEl=document.getElementById("timer");
+const progressBar=document.getElementById("progressBar");
+const answersBox=document.getElementById("answers");
+const correctSound=document.getElementById("correct");
+const wrongSound=document.getElementById("wrong");
+const popup=document.getElementById("popup");
+const finalScore=document.getElementById("finalScore");
+const bestScore=document.getElementById("bestScore");
+const correctCountEl=document.getElementById("correctCount");
+const wrongCountEl=document.getElementById("wrongCount");
+const bgm=document.getElementById("bgm");
+const soundBtn=document.querySelector(".soundBtn");
+
+// ========================= GAME STATE =========================
+let questions=[], index=0, score=0, lives=3;
+let correctCount=0, wrongCount=0;
+let timer, timeLeft=10;
+
+// ========================= BGM =========================
+bgm.volume = 0.4;
+if(localStorage.getItem("musicOn") === null){
+    localStorage.setItem("musicOn","true");
+}
+function updateSoundBtn(){
+    soundBtn.innerText = localStorage.getItem("musicOn") === "true" ? "🔊" : "🔇";
+}
+updateSoundBtn();
+function toggleSound(){
+    if(localStorage.getItem("musicOn")==="true"){
+        localStorage.setItem("musicOn","false");
+        bgm.pause();
+    } else {
+        localStorage.setItem("musicOn","true");
+        bgm.play().catch(()=>{});
+    }
+    updateSoundBtn();
+}
+// Autoplay BGM saat klik pertama halaman
+document.addEventListener("click", ()=>{
+    if(localStorage.getItem("musicOn")==="true") bgm.play().catch(()=>{});
+},{once:true});
+
+// ========================= START GAME =========================
+startGame();
+function startGame(){
+    questions=[...allQuestions].sort(()=>Math.random()-0.5);
+    index=0; score=0; lives=3; correctCount=0; wrongCount=0;
+    loadQuestion();
+}
+
+// ========================= LOAD QUESTION =========================
+function loadQuestion(){
+    if(index >= questions.length || lives <= 0){ finishGame(); return; }
+    let q = questions[index];
+    shapeImg.src = q.img;
+    fact.innerText = "Petunjuk: "+q.fact;
+    scoreEl.innerText = score;
+    livesEl.innerText = lives;
+    progressBar.style.width = ((index/questions.length)*100) + "%";
+
+    clearInterval(timer);
+    timeLeft=10;
+    timerEl.innerText = timeLeft;
+
+    timer = setInterval(()=>{
+        timeLeft--;
+        timerEl.innerText = timeLeft;
+        if(timeLeft <= 0){
+            clearInterval(timer);
+            lives--; wrongCount++; index++;
+            shakeScreen();
+            loadQuestion();
+        }
+    },1000);
+
+    // OPTIONS
+    let answers = [q.answer];
+    while(answers.length<3){
+        let r = allQuestions[Math.floor(Math.random()*allQuestions.length)].answer;
+        if(!answers.includes(r)) answers.push(r);
+    }
+    answers.sort(()=>Math.random()-0.5);
+
+    answersBox.innerHTML = "";
+    answers.forEach(a=>{
+        let b = document.createElement("button");
+        b.className="btn";
+        b.innerText = a;
+        b.onclick = ()=>check(a, q.answer);
+        answersBox.appendChild(b);
+    });
+}
+
+// ========================= CHECK ANSWER =========================
+function check(pick, correct){
+    clearInterval(timer);
+    if(pick === correct){
+        score += 10; correctCount++;
+        correctSound.currentTime=0; correctSound.play();
+    } else {
+        lives--; wrongCount++;
+        wrongSound.currentTime=0; wrongSound.play();
+        shakeScreen();
+    }
+    index++;
+    setTimeout(loadQuestion,600);
+}
+
+// ========================= FINISH GAME =========================
+function finishGame(){
+    clearInterval(timer);
+    let high = localStorage.getItem("highscore") || 0;
+    if(score > high){ localStorage.setItem("highscore",score); high=score; }
+    finalScore.innerText = "Skor: "+score;
+    bestScore.innerText = high;
+    correctCountEl.innerText = correctCount;
+    wrongCountEl.innerText = wrongCount;
+    popup.classList.add("show");
+}
+
+// ========================= RESTART & HOME =========================
+function restart(){ popup.classList.remove("show"); startGame(); }
+function home(){ location.href="index.html"; }
+
+// ========================= EFFECTS =========================
+function shakeScreen(){
+    document.body.classList.add("shakeScreen");
+    setTimeout(()=>document.body.classList.remove("shakeScreen"),350);
+}
+</script>
+
+</body>
+</html>
